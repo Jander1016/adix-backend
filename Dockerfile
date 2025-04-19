@@ -1,53 +1,53 @@
-# 1️⃣ Etapa de construcción
-FROM node:20-alpine AS builder
+# 1️⃣ Etapa de Depedencias
+FROM node:alpine3.21 AS deps
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Instalar dependencias del sistema necesarias para Prisma
-RUN apk add --no-cache openssl
+COPY package.json ./
+COPY package-lock.json ./
+COPY prisma ./prisma
 
-# Copiar solo archivos de dependencias para optimizar la cache
-COPY package.json package-lock.json prisma/schema.prisma ./
+RUN npm install
 
-# Instalar dependencias (incluyendo devDependencies)
-RUN npm ci
+# 2️⃣ Etapa de construcción
+FROM node:alpine3.21 AS builder
 
-# Generar Prisma Client
-RUN npx prisma generate
+ARG ADIX_DATABASE_URL
+ENV DATABASE_URL=$ADIX_DATABASE_URL
 
-# Copiar el resto del código fuente
+# Imprimir el arg para ver el valor recibido
+RUN echo "database_url ::: $DATABASE_URL";
+
+WORKDIR /usr/src/app
+
+# Copiar de deps, los módulos de node
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=deps /usr/src/app/prisma ./prisma
+# Copiar todo el codigo fuente de la aplicación
 COPY . .
 
-# Compilar la aplicación
+RUN npx prisma migrate deploy
+RUN npx prisma generate
+
+
+# RUN npm run test
 RUN npm run build
 
-# 2️⃣ Etapa de producción
-FROM node:20-alpine AS runner
+RUN npm ci -f --only=production && npm cache clean --force
 
-WORKDIR /app
+# 3️⃣ Etapa de producción
+FROM node:alpine3.21 AS production
 
-# Instalar solo dependencias de producción si fuera necesario
-RUN apk add --no-cache openssl
+WORKDIR /usr/src/app
 
-# Crear usuario no-root para mayor seguridad
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -u 1001 -S nodejs -G nodejs
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/prisma ./prisma
 
-# Copiar desde builder
-COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+ENV NODE_ENV=production
 
-# Cambiar a usuario no-root
-USER nodejs
+USER node
 
-# Exponer el puerto
 EXPOSE 3000
 
-# Health check opcional
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD curl -f http://localhost:3000/health || exit 1
-
-# Ejecutar migraciones y luego iniciar la app (en producción)
-CMD npx prisma migrate deploy && node dist/main.js
+CMD ["node", "dist/main.js"]
