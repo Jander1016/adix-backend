@@ -28,6 +28,7 @@ export class EnrollmentService {
       return await this.prismaService.$transaction(async (tx: Prisma.TransactionClient) => {
         // Paso 1: Validar y crear la matrícula
         const enrollment = await this.validateAndCreateEnrollment(tx, createEnrollmentDto);
+        console.log('Matrícula creada:', enrollment);
 
         // Paso 2: Obtener datos completos de la matrícula
         // const fullEnrollment = await this.getFullEnrollmentDetails(tx, enrollment.id);
@@ -39,6 +40,8 @@ export class EnrollmentService {
             admission: { select: { name: true } },
           },
         });
+
+        console.log('Matrícula completa:', fullEnrollment);
 
         if (!fullEnrollment) {
           throw new NotFoundException('Enrollment not found after creation');
