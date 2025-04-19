@@ -1,4 +1,24 @@
-services:  
+version: '3.8'
+
+services:
+  adix:
+    container_name: adix
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - ADIX_DATABASE_URL=${ADIX_DATABASE_URL}
+    ports:
+      - "${PORT}:${PORT}"
+    image: adix:latest
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${ADIX_DATABASE_URL}
+    depends_on:
+      - adix-db
+    mem_limit: 256M
+    mem_reservation: 128M
+
   adix-db:
     container_name: adix_database
     image: postgres:16.2
