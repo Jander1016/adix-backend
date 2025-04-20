@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, Min, MinLength, ValidateNested } from "class-validator"
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator"
 import { TutorTypeList } from "../../common/enums/type-tutor.enum"
 
 type TutorType = 'TUTOR' | 'PADRE' | 'MADRE' 
