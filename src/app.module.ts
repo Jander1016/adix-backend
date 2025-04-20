@@ -8,7 +8,8 @@ import { AreaModule } from './area/area.module';
 import { AdmissionModule } from './admission/admission.module';
 import { AccountReceivableModule } from './account-receivable/account-receivable.module';
 import { PaymentModule } from './payment/payment.module';
+import { InterestedModule } from './interested/interested.module';
 @Module({
-  imports: [TutorModule, EnrollmentModule, CycleModule, CareerModule, StudentModule,  AreaModule, AdmissionModule, AccountReceivableModule, PaymentModule],
+  imports: [TutorModule, EnrollmentModule, CycleModule, CareerModule, StudentModule, AreaModule, AdmissionModule, AccountReceivableModule, PaymentModule, InterestedModule],
 })
-export class AppModule {}
+export class AppModule { }
