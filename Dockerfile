@@ -44,10 +44,8 @@ COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/prisma ./prisma
 
-ENV NODE_ENV=production
-
 USER node
 
-EXPOSE 3000
+EXPOSE 4000
 
 CMD ["node", "dist/main.js"]
