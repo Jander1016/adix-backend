@@ -31,7 +31,6 @@ export class EnrollmentService {
         console.log('Matrícula creada:', enrollment);
 
         // Paso 2: Obtener datos completos de la matrícula
-        // const fullEnrollment = await this.getFullEnrollmentDetails(tx, enrollment.id);
         const fullEnrollment = await tx.enrollment.findUnique({
           where: { id: enrollment.id },
           include: {
@@ -66,26 +65,6 @@ export class EnrollmentService {
 
   // Métodos auxiliares privados para mejor organización
 
-  private async getFullEnrollmentDetails(
-    tx: Prisma.TransactionClient,
-    enrollmentId: string
-  ): Promise<Enrollment> {
-    const fullEnrollment = await tx.enrollment.findUnique({
-      where: { id: enrollmentId },
-      include: {
-        student: { select: { firstName: true, lastName: true } },
-        career: { select: { area: { select: { name: true } } } },
-        admission: { select: { name: true } },
-      },
-    });
-
-    if (!fullEnrollment) {
-      throw new NotFoundException('Enrollment not found after creation');
-    }
-
-    return fullEnrollment;
-  }
-
   private async updateEnrollmentWithStudentCode(
     tx: Prisma.TransactionClient,
     enrollmentId: string,
@@ -111,8 +90,27 @@ export class EnrollmentService {
     if (error instanceof NotFoundException) {
       throw error;
     }
-
-    // Aquí puedes agregar más manejo de errores específicos
+    if (error instanceof BadRequestException) {
+      throw error;
+    }
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        throw new BadRequestException('El código de estudiante ya existe');
+      }
+    }
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      throw new BadRequestException('Error de validación en la creación de matrícula');
+    }
+    if (error instanceof Prisma.PrismaClientInitializationError) {
+      throw new InternalServerErrorException('Error de inicialización de Prisma');
+    }
+    if (error instanceof Prisma.PrismaClientRustPanicError) {
+      throw new InternalServerErrorException('Error interno de Prisma');
+    }
+    if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+      throw new InternalServerErrorException('Error desconocido de Prisma');
+    }
+    
     this.logger.error('Error creating enrollment', error.stack);
     throw new InternalServerErrorException('Failed to create enrollment');
   }
@@ -129,7 +127,6 @@ export class EnrollmentService {
     if (!dto.paymentCarnet) {
       const carnetAccount = await this.accountReceivableService.create({
         studentId: enrollment.studentId,
-        // enrollmentId: enrollment.id,
         totalAmount: dto.carnetCost || 0,
         pendingBalance: dto.carnetCost || 0,
         concept: `Pago de Carnet - ${studentCode}`,
