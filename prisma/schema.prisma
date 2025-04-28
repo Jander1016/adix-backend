@@ -238,7 +238,7 @@ model Payment {
   invoiceNumber  String    @unique
   dueDate        DateTime
   amountPaid     Decimal   @db.Decimal(10, 2)
-  paymentDate    DateTime  @default(now())
+  paymentDate    DateTime  
   paymentMethod  PaymentMethod
   status         PaymentStatus
   notes          String?
