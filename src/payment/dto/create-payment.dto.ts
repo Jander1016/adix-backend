@@ -1,5 +1,6 @@
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
-import { IsDate, IsDecimal, IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
+import { Transform } from "class-transformer";
+import {  IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUUID, Min } from "class-validator";
 
 export class CreatePaymentDto {
   @IsUUID()
@@ -8,14 +9,23 @@ export class CreatePaymentDto {
   @IsString()
   invoiceNumber: string;
 
-  @IsDate()
-  dueDate: Date;
+  @IsDateString({}, { message: 'dueDate debe estar en formato ISO o dd/MM/yyyy' })
+  @Transform(({ value }) => {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? null : date.toISOString();
+  })
+  dueDate: string;
 
-  @IsDecimal()
+  @IsNumber()
+  @Min(0, { message: 'carnetCost no puede ser negativo' })
   amountPaid: number;
 
-  @IsDate()
-  paymentDate: Date;
+  @IsDateString({}, { message: 'dueDate debe estar en formato ISO o dd/MM/yyyy' })
+  @Transform(({ value }) => {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? null : date.toISOString();
+  })
+  paymentDate: string;
 
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod;

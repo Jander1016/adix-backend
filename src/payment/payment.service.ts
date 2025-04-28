@@ -24,6 +24,7 @@ export class PaymentService {
       data: { ...dto },
     });
 
+    console.log("payment", payment);
     // Actualizar el saldo pendiente de la cuenta por cobrar
     const newPendingBalance = Number(account.pendingBalance) - dto.amountPaid;
     await this.prisma.accountReceivable.update({
@@ -84,6 +85,42 @@ export class PaymentService {
     });
   }
 
+  async cancelPayment(id: string): Promise<void> {
+
+    try {
+      const payment = await this.prisma.payment.findUnique({
+        where: { id },
+      });
+      if (!payment) {
+        throw new NotFoundException(`Pago con ID ${id} no encontrado`);
+      }
+      const account = await this.prisma.accountReceivable.findUnique({
+        where: { id: payment.accountReceivableId },
+      });
+      if (!account) {
+        throw new NotFoundException(`Cuenta por cobrar con ID ${payment.accountReceivableId} no encontrada`);
+      }
+      const newPendingBalance = Number(account.pendingBalance) + Number(payment.amountPaid);
+      await this.prisma.accountReceivable.update({
+        where: { id: payment.accountReceivableId },
+        data: {
+          pendingBalance: newPendingBalance,
+          status: newPendingBalance === 0 ? PaymentStatus.PAGADO : PaymentStatus.PENDIENTE,
+        },
+      });
+      await this.prisma.payment.update({
+        where: { id },
+        data: { status: PaymentStatus.ANULADO },
+      });
+
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new BadRequestException('Error al cancelar el pago');
+      }
+    }
+  }
 
   async remove(id: string): Promise<void> {
     await this.prisma.payment.update({
