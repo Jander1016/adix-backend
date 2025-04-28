@@ -28,7 +28,7 @@ export class EnrollmentService {
       return await this.prismaService.$transaction(async (tx: Prisma.TransactionClient) => {
         // Paso 1: Validar y crear la matrícula
         const enrollment = await this.validateAndCreateEnrollment(tx, createEnrollmentDto);
-        console.log('Matrícula creada:', enrollment);
+        // console.log('Matrícula creada:', enrollment);
 
         // Paso 2: Obtener datos completos de la matrícula
         const fullEnrollment = await tx.enrollment.findUnique({
@@ -40,7 +40,7 @@ export class EnrollmentService {
           },
         });
 
-        console.log('Matrícula completa:', fullEnrollment);
+        // console.log('Matrícula completa:', fullEnrollment);
 
         if (!fullEnrollment) {
           throw new NotFoundException('Enrollment not found after creation');
@@ -136,12 +136,12 @@ export class EnrollmentService {
       await this.paymentService.create({
         accountReceivableId: carnetAccount.id,
         invoiceNumber: `INV-${carnetAccount.id}`,
-        dueDate: this.getNextDueDate(0),
+        dueDate: this.getNextDueDate(0).toISOString(),
         amountPaid: 0,
         paymentMethod: PaymentMethod.EFECTIVO,
         status: PaymentStatus.PENDIENTE,
         notes: `Pago de carnet pendiente - ${studentCode}`,
-        paymentDate: new Date(),
+        paymentDate: new Date().toISOString(),
       });
     } else {
       // Si ya pagó el carnet, registrar el pago automáticamente como PAGADO
@@ -156,12 +156,12 @@ export class EnrollmentService {
       await this.paymentService.create({
         accountReceivableId: carnetAccount.id,
         invoiceNumber: `INV-${carnetAccount.id}`,
-        dueDate: this.getNextDueDate(0),
+        dueDate: this.getNextDueDate(0).toISOString(),
         amountPaid: dto.carnetCost || 0,
         paymentMethod: PaymentMethod.EFECTIVO,
         status: PaymentStatus.PAGADO,
         notes: `Pago de carnet realizado - ${studentCode}`,
-        paymentDate: new Date(),
+        paymentDate: new Date().toISOString(),
       });
     }
 
@@ -182,12 +182,12 @@ export class EnrollmentService {
       await this.paymentService.create({
         accountReceivableId: initialAccount.id,
         invoiceNumber: `INV-${initialAccount.id}-0`,
-        dueDate: new Date(),
+        dueDate: new Date().toISOString(),
         amountPaid: dto.initialPayment,
         paymentMethod: PaymentMethod.EFECTIVO,
         status: PaymentStatus.PAGADO,
         notes: `Pago correspondiente a cuota 1 - ${studentCode}`,
-        paymentDate: new Date(),
+        paymentDate: new Date().toISOString(),
       });
 
     }
@@ -195,7 +195,6 @@ export class EnrollmentService {
     // Crear cuentas por cobrar mensuales según número de cuotas
     for (quote; quote < numberOfInstallments; quote++) {
       const dueDate = this.getNextDueDate(quote);
-
       await this.accountReceivableService.create({
         studentId: enrollment.studentId,
         totalAmount: amountPerInstallment,
@@ -310,7 +309,9 @@ export class EnrollmentService {
 
     const enrollment = await this.prismaService.enrollment.findMany({
       where: { deletedAt: null },
-      include: { student: true, cycle: true, career: { include: { area: true } }, admission: true }
+      include: { student: true, cycle: true, career: { include: { area: true } }, admission: true },
+      take: limit,
+      skip: (page - 1) * limit,
     });
     if (enrollment.length <= 0) {
       return {
