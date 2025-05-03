@@ -4,6 +4,7 @@ import { UpdateTutorDto } from './dto/update-tutor.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaginationDto } from 'src/common';
 import { Tutor } from '@prisma/client';
+import { stat } from 'fs';
 
 @Injectable()
 export class TutorService {
@@ -43,23 +44,23 @@ export class TutorService {
 
   async findAll(paginationDto: PaginationDto) {
     const { limit, page } = paginationDto;
-    
+
     const totalPage = await this.prismaService.tutor.count(
       {
         where: { deletedAt: null }
       }
     );
 
-    if(!limit) {
+    if (!limit) {
       const tutors = await this.prismaService.tutor.findMany({
         where: { deletedAt: null },
         include: { students: true }
       })
-  
+
       return {
         meta: {
           total: totalPage,
-          lastPage:1,
+          lastPage: 1,
           page
         },
         data: tutors
@@ -131,22 +132,32 @@ export class TutorService {
     });
   }
 
-  async remove(id: string) {
-    const tutor = await this.prismaService.student.findMany({
+  async remove(id: string): Promise<{ message: string, state: boolean }> {
+    let message = ""
+    let state = false
+    const tutorWithStudent = await this.prismaService.student.findMany({
       where: { tutorId: id },
     });
-    if (tutor.length > 0) {
-      throw new BadRequestException('No se puede eliminar el tutor porque tiene estudiantes asociados.');
+    if (tutorWithStudent.length > 0) {
+      message = 'No se puede eliminar el tutor porque tiene estudiantes asociados.';
+      state = false;
+      return { message, state };
     }
     const existingTutor = await this.prismaService.tutor.findUnique({
       where: { id },
     });
     if (!existingTutor) {
-      throw new NotFoundException(`Tutor con ID ${id} no encontrado`);
+      message = `Tutor con ID ${id} no encontrado`;
+      state = false;
+      return { message, state };
     }
-    return await this.prismaService.tutor.update({
+    await this.prismaService.tutor.update({
       where: { id },
       data: { deletedAt: new Date() }
     });
+    return {
+      message: 'Tutor eliminado correctamente',
+      state: true
+    };
   }
 }
