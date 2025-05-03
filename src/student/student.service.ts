@@ -32,6 +32,21 @@ export class StudentService {
       where: { deletedAt: null }
     });
 
+    if(!limit) {
+      const students = await this.prismaService.student.findMany({
+        where: { deletedAt: null },
+        include: { tutor: true, enrollments: true, accountReceivable: true }
+      })
+      return {
+        meta: {
+          total,
+          lastPage: 1,
+          page,
+        },
+        data: students
+      };
+    }
+
     const lastPage = Math.ceil(total / limit);
 
     const students = await this.prismaService.student.findMany({

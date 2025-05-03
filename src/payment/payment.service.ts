@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { Payment, PaymentStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UpdatePaymentDto } from './dto/update-payment.dto';
 
 @Injectable()
 export class PaymentService {
@@ -56,7 +57,7 @@ export class PaymentService {
     return payment;
   }
 
-  async update(id: string, dto: CreatePaymentDto): Promise<Payment> {
+  async update(id: string, dto: UpdatePaymentDto): Promise<Payment> {
     const payment = await this.prisma.payment.findUnique({
       where: { id },
     });

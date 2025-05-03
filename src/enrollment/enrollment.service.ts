@@ -6,7 +6,6 @@ import { Prisma, Enrollment, PaymentStatus, PaymentMethod } from '@prisma/client
 import { AccountReceivableService } from 'src/account-receivable/account-receivable.service';
 import { PaymentService } from 'src/payment/payment.service';
 import { PaginationDto } from 'src/common';
-// import { EnrollmentWithDetails } from './types/enrollment.types';
 
 type CompatibleUpdateEnrollmentDto = Omit<UpdateEnrollmentDto, 'student' | 'tutor'>;
 
@@ -305,6 +304,22 @@ export class EnrollmentService {
         where: { deletedAt: null }
       }
     );
+
+    if (!limit) {
+      const enrollment = await this.prismaService.enrollment.findMany({
+        where: { deletedAt: null },
+        include: { student: true, cycle: true, career: { include: { area: true } }, admission: true }
+      });
+      return {
+        meta: {
+          total: totalPage,
+          lastPage: 1,
+          page
+        },
+        data: enrollment
+      };
+    }
+
     const lastPage = Math.ceil(totalPage / limit);
 
     const enrollment = await this.prismaService.enrollment.findMany({
@@ -342,9 +357,7 @@ export class EnrollmentService {
     return enrollment;
   }
 
-
   async update(id: string, updateEnrollmentDto: CompatibleUpdateEnrollmentDto): Promise<Enrollment> {
-
     return this.prismaService.enrollment.update({ where: { id }, data: updateEnrollmentDto });
   }
 

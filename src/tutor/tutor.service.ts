@@ -43,12 +43,38 @@ export class TutorService {
 
   async findAll(paginationDto: PaginationDto) {
     const { limit, page } = paginationDto;
+    
     const totalPage = await this.prismaService.tutor.count(
       {
         where: { deletedAt: null }
       }
     );
+
+    if(!limit) {
+      const tutors = await this.prismaService.tutor.findMany({
+        where: { deletedAt: null },
+        include: { students: true }
+      })
+  
+      return {
+        meta: {
+          total: totalPage,
+          lastPage:1,
+          page
+        },
+        data: tutors
+      }
+    }
+
+
     const lastPage = Math.ceil(totalPage / limit);
+
+    const tutors = await this.prismaService.tutor.findMany({
+      where: { deletedAt: null },
+      take: limit,
+      skip: (page - 1) * limit,
+      include: { students: true }
+    })
 
     return {
       meta: {
@@ -56,14 +82,8 @@ export class TutorService {
         lastPage,
         page
       },
-      data: await this.prismaService.tutor.findMany({
-        where: { deletedAt: null },
-        take: limit,
-        skip: (page - 1) * limit,
-        include: { students: true }
-      })
+      data: tutors
     }
-
   }
 
   async findOne(id: string) {
@@ -112,6 +132,18 @@ export class TutorService {
   }
 
   async remove(id: string) {
+    const tutor = await this.prismaService.student.findMany({
+      where: { tutorId: id },
+    });
+    if (tutor.length > 0) {
+      throw new BadRequestException('No se puede eliminar el tutor porque tiene estudiantes asociados.');
+    }
+    const existingTutor = await this.prismaService.tutor.findUnique({
+      where: { id },
+    });
+    if (!existingTutor) {
+      throw new NotFoundException(`Tutor con ID ${id} no encontrado`);
+    }
     return await this.prismaService.tutor.update({
       where: { id },
       data: { deletedAt: new Date() }
