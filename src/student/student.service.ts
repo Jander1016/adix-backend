@@ -133,14 +133,14 @@ export class StudentService {
       message =`El estudiante con id ${id} no existe`;
       state = false;
     }else if (student.enrollments.length > 0) {
-      message = `El estudiante con id ${id} tiene una matrícula activa`;
+      message = `El estudiante ${student.firstName} ${student.lastName} tiene una matrícula activa`;
       state = false;
     } else{
       await this.prismaService.student.update({
         where: { id: id },
         data: { deletedAt: new Date() }
       })
-      message = `El estudiante con id ${id} ha sido eliminado`;
+      message = `El estudiante ${student.firstName} ${student.lastName} ha sido eliminado`;
       state = true;
     }
     return {
