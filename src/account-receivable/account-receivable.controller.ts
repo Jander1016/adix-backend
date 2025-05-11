@@ -16,6 +16,11 @@ export class AccountReceivableController {
   findAll() {
     return this.accountReceivableService.findAll();
   }
+
+  @Get('/codeStudent/:codeStudent')
+  findByCodeStudent(@Param('codeStudent') codeStudent: string) {
+    return this.accountReceivableService.findByCodeStudent(codeStudent);
+  }
   
   @Get('/student/:id')
   findStudentById(@Param('id') id: string) {

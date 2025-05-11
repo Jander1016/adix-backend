@@ -26,7 +26,7 @@ export class AccountReceivableService {
 
   async findAll(): Promise<AccountReceivable[]> {
     return this.prismaService.accountReceivable.findMany({
-      where: { pendingBalance: { gt: 0 } }, // Filtrar solo cuentas con saldo pendiente
+      orderBy: { dueDate: 'desc' },
       include: { student: true, payments: true },
     });
   }
@@ -43,9 +43,21 @@ export class AccountReceivableService {
     return account;
   }
 
+  async findByCodeStudent(codeStudent: string): Promise<AccountReceivable[]> {
+     const account = await this.prismaService.accountReceivable.findMany({
+      where:{ concept : { contains: codeStudent } },
+      orderBy: { dueDate: 'desc' },
+      include: { student: true, payments: true },
+    });
+
+    return account;
+  }
+ 
+
   async findByStudentId(id: string): Promise<AccountReceivable[]> {
     const account = await this.prismaService.accountReceivable.findMany({
       where: { studentId: id },
+      orderBy: { dueDate: 'desc' },
       include: { student: true, payments: true },
     });
 
