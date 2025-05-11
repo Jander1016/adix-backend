@@ -12,3 +12,9 @@ export class PaginationDto{
   @Type(() => Number)
   limit?: number;
 }
+
+export class MetaDtoPagination {
+  total: number;
+  lastPage: number;
+  page: number;
+}
