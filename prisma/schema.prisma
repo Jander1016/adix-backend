@@ -218,14 +218,12 @@ model AccountReceivable {
   id             String    @id @default(uuid())
   paymentDate    DateTime
   studentId      String    
-  // enrollmentId   String
   totalAmount    Decimal
   pendingBalance Decimal
   status         PaymentStatus
   concept        String?         // Concepto de la cuenta por cobrar (e.g., "MATRÍCULA", "PAGO CARNET")
   dueDate        DateTime  // Fecha de vencimiento para el pago
 
-  // enrollment     Enrollment @relation(fields: [enrollmentId], references: [id])
   student        Student    @relation(fields: [studentId], references: [id])
   payments       Payment[]
 
