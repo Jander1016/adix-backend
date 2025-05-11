@@ -3,7 +3,6 @@ import { StudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaginationDto } from 'src/common';
-import { ok } from 'assert';
 
 @Injectable()
 export class StudentService {
@@ -14,8 +13,6 @@ export class StudentService {
 
   async create(createStudentDto: StudentDto) {
     if (createStudentDto.birthday) {
-      // Convertir la fecha de cumpleaños a un objeto Date
-      // y luego a una cadena en formato ISO 8601
       const birthday = new Date(createStudentDto.birthday);
       createStudentDto.birthday = birthday;
     }

@@ -4,7 +4,6 @@ import { UpdateTutorDto } from './dto/update-tutor.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaginationDto } from 'src/common';
 import { Tutor } from '@prisma/client';
-import { stat } from 'fs';
 
 @Injectable()
 export class TutorService {

@@ -25,7 +25,6 @@ export class PaymentService {
       data: { ...dto },
     });
 
-    console.log("payment", payment);
     // Actualizar el saldo pendiente de la cuenta por cobrar
     const newPendingBalance = Number(account.pendingBalance) - dto.amountPaid;
     await this.prisma.accountReceivable.update({
@@ -41,6 +40,7 @@ export class PaymentService {
 
   async findAll(): Promise<Payment[]> {
     return this.prisma.payment.findMany({
+      orderBy: { paymentDate: 'desc' },
       include: { accountReceivable: true },
     });
   }
@@ -77,12 +77,14 @@ export class PaymentService {
   async findPaymentsByStudent(studentId: string): Promise<Payment[]> {
     return this.prisma.payment.findMany({
       where: { accountReceivable: { studentId } },
+      orderBy: { paymentDate: 'desc' }
     });
   }
 
   async findPaymentsByAccount(accountId: string): Promise<Payment[]> {
     return this.prisma.payment.findMany({
       where: { accountReceivableId: accountId },
+      orderBy: { paymentDate: 'desc' },
     });
   }
 
