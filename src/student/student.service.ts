@@ -52,10 +52,7 @@ export class StudentService {
       take: limit,
       skip: (page - 1) * limit,
     });
-
-    if (students.length === 0) {
-      throw new NotFoundException('No se encontraron estudiantes');
-    }
+    
     if (students.length === 0) {
       return {
         meta: {
