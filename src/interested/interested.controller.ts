@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { InterestedService } from './interested.service';
 import { CreateInterestedDto } from './dto/create-interested.dto';
 import { UpdateInterestedDto } from './dto/update-interested.dto';
+import { PaginationDto } from 'src/common';
 
-@Controller('interesteds')
+@Controller('interested')
 export class InterestedController {
   constructor(private readonly interestedService: InterestedService) {}
 
@@ -13,22 +14,22 @@ export class InterestedController {
   }
 
   @Get()
-  findAll() {
-    return this.interestedService.findAll();
+  findAll(@Query()PaginationDto: PaginationDto) {
+    return this.interestedService.findAll(PaginationDto);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.interestedService.findOne(+id);
+    return this.interestedService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateInterestedDto: UpdateInterestedDto) {
-    return this.interestedService.update(+id, updateInterestedDto);
+    return this.interestedService.update(id, updateInterestedDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.interestedService.remove(+id);
+    return this.interestedService.remove(id);
   }
 }
