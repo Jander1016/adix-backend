@@ -353,7 +353,6 @@ export class EnrollmentService {
       where: { id, deletedAt: null },
       include: { student: true, cycle: true, career: true, admission: true },
     });
-    if (!enrollment) throw new NotFoundException('Enrollment not found');
     return enrollment;
   }
 
